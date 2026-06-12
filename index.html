@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>지켜줘 내 텅장, 내 필통!</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="주요 메뉴">
+        <div class="brand-block">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <div>
+            <p class="brand-eyebrow">필기구 현황 관리</p>
+            <h1>지켜줘 내 텅장, 내 필통!</h1>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button data-route="main">메인</button>
+          <button data-route="personal">개인 현황판</button>
+          <button data-route="shared">전체 공유 현황판</button>
+          <button data-route="reviews">후기 게시판</button>
+          <button data-route="friends">친구 관리</button>
+          <button data-route="messages">쪽지함</button>
+          <button data-route="studio">제작실</button>
+          <button data-route="mypage">마이페이지</button>
+          <button data-route="admin" class="admin-link">관리자</button>
+        </nav>
+      </aside>
+
+      <main class="content-area">
+        <header class="topbar">
+          <button class="menu-toggle" type="button" aria-label="메뉴 열기">☰</button>
+          <div id="sessionStatus" class="session-status"></div>
+          <div class="topbar-actions">
+            <button class="ghost-btn" data-route="login" id="loginButton">로그인</button>
+            <button class="primary-btn" data-route="signup" id="signupButton">회원가입</button>
+            <button class="danger-btn hidden" id="logoutButton">로그아웃</button>
+          </div>
+        </header>
+
+        <section id="toast" class="toast" role="status" aria-live="polite"></section>
+        <section id="app" class="view-root"></section>
+      </main>
+    </div>
+
+    <script src="./firebase-config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

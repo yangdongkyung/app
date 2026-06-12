@@ -1,0 +1,160 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "admins": {
+      "$uid": {
+        ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+        ".validate": "newData.isBoolean()"
+      }
+    },
+
+    "studentIndex": {
+      "$studentId": {
+        ".read": "auth != null && (data.val() === auth.uid || root.child('admins').child(auth.uid).val() === true)",
+        ".write": "auth != null && (!data.exists() || data.val() === auth.uid || root.child('admins').child(auth.uid).val() === true)",
+        ".validate": "newData.isString()"
+      }
+    },
+
+    "users": {
+      ".indexOn": ["studentId", "approved", "suspended"],
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+        ".write": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+        ".validate": "root.child('admins').child(auth.uid).val() === true || ((!data.exists() && newData.child('approved').val() === false && newData.child('suspended').val() === false) || (data.exists() && newData.child('approved').val() === data.child('approved').val() && newData.child('suspended').val() === data.child('suspended').val()))"
+      }
+    },
+
+    "publicProfiles": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)"
+      }
+    },
+
+    "boards": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true || root.child('boardShares').child($uid).child('active').val() === true)",
+        ".write": "auth != null && auth.uid === $uid && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true",
+        "$rowId": {
+          ".validate": "newData.hasChildren(['item', 'qty']) && newData.child('item').isString() && newData.child('qty').isNumber() && newData.child('qty').val() >= 0 && newData.child('qty').val() <= 999"
+        }
+      }
+    },
+
+    "boardShares": {
+      ".indexOn": ["active", "updatedAt"],
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (auth.uid === $uid && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true))",
+        ".validate": "newData.hasChildren(['active', 'updatedAt']) && newData.child('active').isBoolean() && newData.child('updatedAt').isNumber()"
+      }
+    },
+
+    "boardComments": {
+      "$boardUid": {
+        ".read": "auth != null && root.child('boardShares').child($boardUid).child('active').val() === true",
+        "$commentId": {
+          ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true && ((!data.exists() && newData.child('userId').val() === auth.uid) || (data.exists() && data.child('userId').val() === auth.uid))))",
+          ".validate": "!newData.exists() || (newData.hasChildren(['userId', 'text', 'createdAt']) && newData.child('userId').isString() && newData.child('text').isString() && newData.child('createdAt').isNumber())"
+        }
+      }
+    },
+
+    "boardReplies": {
+      "$boardUid": {
+        "$commentId": {
+          "$replyId": {
+            ".read": "auth != null && root.child('boardShares').child($boardUid).child('active').val() === true",
+            ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true && ((!data.exists() && newData.child('userId').val() === auth.uid) || (data.exists() && data.child('userId').val() === auth.uid))))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['userId', 'text', 'createdAt']) && newData.child('userId').isString() && newData.child('text').isString() && newData.child('createdAt').isNumber())"
+          }
+        }
+      }
+    },
+
+    "posts": {
+      ".indexOn": ["createdAt", "commentCount", "viewCount", "hidden"],
+      "$postId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true && ((!data.exists() && newData.child('userId').val() === auth.uid) || (data.exists() && data.child('userId').val() === auth.uid && newData.child('userId').val() === auth.uid))))",
+        ".validate": "!newData.exists() || newData.hasChildren(['userId', 'title', 'content', 'createdAt'])"
+      }
+    },
+
+    "postComments": {
+      "$postId": {
+        ".read": "auth != null",
+        "$commentId": {
+          ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true && ((!data.exists() && newData.child('userId').val() === auth.uid) || (data.exists() && data.child('userId').val() === auth.uid))))",
+          ".validate": "!newData.exists() || (newData.hasChildren(['userId', 'text', 'createdAt']) && newData.child('userId').isString() && newData.child('text').isString() && newData.child('createdAt').isNumber())"
+        }
+      }
+    },
+
+    "postReplies": {
+      "$postId": {
+        "$commentId": {
+          "$replyId": {
+            ".read": "auth != null",
+            ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true && ((!data.exists() && newData.child('userId').val() === auth.uid) || (data.exists() && data.child('userId').val() === auth.uid))))",
+            ".validate": "!newData.exists() || (newData.hasChildren(['userId', 'text', 'createdAt']) && newData.child('userId').isString() && newData.child('text').isString() && newData.child('createdAt').isNumber())"
+          }
+        }
+      }
+    },
+
+    "friendRequests": {
+      ".indexOn": ["fromId", "toId", "status", "createdAt"],
+      "$requestId": {
+        ".read": "auth != null && (data.child('fromId').val() === auth.uid || data.child('toId').val() === auth.uid || root.child('admins').child(auth.uid).val() === true)",
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (!data.exists() && newData.child('fromId').val() === auth.uid && newData.child('toId').val() !== auth.uid && newData.child('status').val() === 'pending' && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true) || (data.exists() && data.child('toId').val() === auth.uid && newData.child('fromId').val() === data.child('fromId').val() && newData.child('toId').val() === data.child('toId').val()))",
+        ".validate": "!newData.exists() || (newData.hasChildren(['fromId', 'toId', 'status', 'createdAt']) && (newData.child('status').val() === 'pending' || newData.child('status').val() === 'accepted' || newData.child('status').val() === 'rejected'))"
+      }
+    },
+
+    "friendships": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+        "$friendUid": {
+          ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (auth.uid === $uid && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true))",
+          ".validate": "newData.isNumber()"
+        }
+      }
+    },
+
+    "messages": {
+      ".indexOn": ["fromId", "toId", "createdAt", "reported"],
+      "$messageId": {
+        ".read": "auth != null && (data.child('fromId').val() === auth.uid || data.child('toId').val() === auth.uid || (data.child('reported').val() === true && root.child('admins').child(auth.uid).val() === true))",
+        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (!data.exists() && newData.child('fromId').val() === auth.uid && root.child('friendships').child(auth.uid).child(newData.child('toId').val()).exists() && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true) || (data.exists() && (data.child('fromId').val() === auth.uid || data.child('toId').val() === auth.uid)))",
+        ".validate": "!newData.exists() || newData.hasChildren(['fromId', 'toId', 'title', 'body', 'createdAt'])"
+      }
+    },
+
+    "pdfUploads": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+        "$pdfId": {
+          ".write": "auth != null && auth.uid === $uid && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true",
+          ".validate": "!newData.exists() || newData.hasChildren(['fileName', 'storagePath', 'createdAt'])"
+        }
+      }
+    },
+
+    "pdfRows": {
+      "$uid": {
+        "$pdfId": {
+          ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+          ".write": "auth != null && auth.uid === $uid && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('suspended').val() !== true",
+          "$rowId": {
+            ".validate": "newData.hasChildren(['item', 'qty']) && newData.child('item').isString() && newData.child('qty').isNumber() && newData.child('qty').val() >= 0 && newData.child('qty').val() <= 999"
+          }
+        }
+      }
+    }
+  }
+}
