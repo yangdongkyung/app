@@ -1,6 +1,6 @@
 (function () {
   const STORAGE_KEY = "jikyeojwo-my-pen-case-v1";
-  const ADMIN_STUDENT_ID = "20020709";
+  const ADMIN_ID = "20020709";
   const ADMIN_PASSWORD = "11223344";
 
   const app = document.querySelector("#app");
@@ -1046,9 +1046,26 @@
         <section class="page-head">
           <div>
             <h2 class="page-title">관리자 홈페이지</h2>
-            <p class="page-subtitle">관리자만 접근할 수 있습니다. 관리자 계정으로 로그인해 주세요.</p>
+            <p class="page-subtitle">관리자 전용 로그인창입니다. 관리자는 학번 없이 관리자 아이디와 비밀번호로 로그인합니다.</p>
           </div>
-          <button class="primary-btn" data-route="login">관리자 로그인</button>
+        </section>
+        <section class="cards-grid">
+          <form class="window-card form-grid" id="adminLoginForm">
+            <h3 class="section-title">관리자 로그인</h3>
+            <div class="form-field">
+              <label for="adminId">관리자 아이디</label>
+              <input id="adminId" name="adminId" autocomplete="username">
+            </div>
+            <div class="form-field">
+              <label for="adminPassword">비밀번호</label>
+              <input id="adminPassword" name="password" type="password" autocomplete="current-password">
+            </div>
+            <button class="primary-btn" type="submit">관리자 로그인</button>
+          </form>
+          <div class="window-card status-box">
+            <strong>일반 사용자는 왼쪽 메뉴의 로그인 화면을 이용합니다.</strong>
+            <span>관리자 메뉴는 회원 승인, 정지, 게시글/댓글 관리, 쪽지 신고 관리를 위한 별도 공간입니다.</span>
+          </div>
         </section>
       `;
       return;
@@ -1553,14 +1570,6 @@
       const studentId = normalizeStudentId(data.studentId);
       const password = String(data.password || "");
 
-      if (studentId === ADMIN_STUDENT_ID && password === ADMIN_PASSWORD) {
-        store.session = { userId: null, isAdmin: true };
-        persist();
-        showToast("관리자로 로그인했습니다.");
-        setRoute("admin");
-        return;
-      }
-
       const user = store.users.find((item) => item.name === name && item.studentId === studentId);
       if (!user || user.passwordHash !== await hashPassword(password)) {
         showToast("이름, 학번 또는 비밀번호가 올바르지 않습니다.", "error");
@@ -1573,6 +1582,22 @@
       return;
     }
 
+    if (form.id === "adminLoginForm") {
+      const data = Object.fromEntries(new FormData(form));
+      const adminId = String(data.adminId || "").trim();
+      const password = String(data.password || "");
+      if (adminId !== ADMIN_ID || password !== ADMIN_PASSWORD) {
+        showToast("관리자 아이디 또는 비밀번호가 올바르지 않습니다.", "error");
+        return;
+      }
+      store.session = { userId: null, isAdmin: true };
+      persist();
+      showToast("관리자로 로그인했습니다.");
+      setRoute("admin");
+      render();
+      return;
+    }
+
     if (form.id === "signupForm") {
       const data = Object.fromEntries(new FormData(form));
       const name = String(data.name || "").trim();
@@ -1581,10 +1606,6 @@
       const confirm = String(data.passwordConfirm || "");
       if (!name || !studentId) {
         showToast("이름과 학번을 입력해 주세요.", "error");
-        return;
-      }
-      if (studentId === ADMIN_STUDENT_ID) {
-        showToast("이 학번은 관리자 계정으로 예약되어 있습니다.", "error");
         return;
       }
       if (store.users.some((user) => user.studentId === studentId)) {
@@ -1845,8 +1866,8 @@
   document.querySelector("#logoutButton").addEventListener("click", () => {
     store.session = { userId: null, isAdmin: false };
     persist();
-    showToast("로그아웃했습니다.");
-    setRoute("main");
+    location.hash = "main";
+    location.reload();
   });
 
   window.addEventListener("hashchange", render);
